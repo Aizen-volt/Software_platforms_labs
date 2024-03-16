@@ -1,23 +1,20 @@
 package org.example;
 
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Objects;
 import java.util.Set;
 
-public class Mage implements Comparable {
-    private String name;
-    private int level;
-    private double power;
-    private Set<Mage> apprentices;
-    private String sortingMode;
+public class Mage implements Comparable<Mage> {
+    private final String name;
+    private final int level;
+    private final double power;
+    private final Set<Mage> apprentices;
 
-    public Mage(String name, int level, double power, String sortingMode) {
+    public Mage(String name, int level, double power, SortingMode sortingMode) {
         this.name = name;
         this.level = level;
         this.power = power;
-        this.apprentices = SetCreator.createSet(sortingMode);
-        this.sortingMode = sortingMode;
+        this.apprentices = sortingMode.createSet();
     }
 
     public String getName() {
@@ -33,82 +30,64 @@ public class Mage implements Comparable {
     }
 
     public Set<Mage> getApprentices() {
-        return SetCreator.copySet(apprentices, sortingMode);
+        return Collections.unmodifiableSet(apprentices);
     }
 
-    public void addApprentice(Mage mage) {
-        apprentices.add(mage);
+    public void addApprentice(Mage apprentice) {
+        apprentices.add(apprentice);
     }
 
     @Override
-    public boolean equals(Object other) {
-        if (this == other)
-            return true;
-        if (other == null)
-            return false;
-        if (getClass() != other.getClass())
-            return false;
-
-        Mage mage = (Mage) other;
-        return this.name.equals(mage.name)
-                && this.level == mage.level
-                && this.power == mage.power
-                && this.apprentices == mage.apprentices;
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Mage mage = (Mage) o;
+        return level == mage.level && Double.compare(mage.power, power) == 0 && Objects.equals(name, mage.name);
     }
 
     @Override
     public int hashCode() {
-        long temp = Double.doubleToLongBits(power) * level;
-        return 983 + name.hashCode() + 643 * (int)(temp ^ (temp >>> 32));
+        return Objects.hash(name, level, power);
+    }
+
+    @Override
+    public int compareTo(Mage otherMage) {
+        int levelComparison = Integer.compare(this.level, otherMage.level);
+        if (levelComparison != 0) {
+            return levelComparison;
+        }
+        int nameComparison = this.name.compareTo(otherMage.name);
+        if (nameComparison != 0) {
+            return nameComparison;
+        }
+        return Double.compare(this.power, otherMage.power);
+    }
+
+    public String printRecursive(int startNumber) {
+        StringBuilder output = new StringBuilder();
+        printRecursiveHelper(output, this, String.valueOf(startNumber), 0);
+        return output.toString();
+    }
+
+    private void printRecursiveHelper(StringBuilder output, Mage mage, String numbering, int depth) {
+        output.append(getIndentation(depth)).append(numbering).append(" ").append(mage.getName()).append("\n");
+        int nextNumber = 1;
+        for (Mage apprentice : mage.getApprentices()) {
+            printRecursiveHelper(output, apprentice, numbering + "." + nextNumber, depth + 1);
+            nextNumber++;
+        }
+    }
+
+    private String getIndentation(int depth) {
+        return "  ".repeat(Math.max(0, depth));
     }
 
     @Override
     public String toString() {
-        return "Mage{name='" + name + "', level=" + level + ", power=" + power + "}";
-    }
-
-    public String printRecursive(int number, int subNumber, int depth) {
-        StringBuilder output = new StringBuilder();
-        output.append("\t".repeat(depth - 1));
-        if (depth == 1)
-            output.append(number + "." + this + "\n");
-
-        int i = 1;
-        for (var apprentice: apprentices) {
-            output.append(apprentice.printRecursive(apprentice, depth, i, number));
-            i++;
-        }
-        i = number;
-        for (var apprentice: apprentices) {
-            output.append(apprentice.printRecursive(i, i, depth + 1));
-            i++;
-        }
-        return output.toString();
-    }
-
-    private String printRecursive(Mage mage, int depth, int number, int subNumber) {
-        StringBuilder output = new StringBuilder();
-
-        output.append("\t".repeat(depth))
-                .append((subNumber + ".").repeat(depth))
-                .append(number + "." + this + "\n");
-        return output.toString();
-    }
-
-    @Override
-    public int compareTo(Object o) {
-        if (o == null || getClass() != o.getClass())
-            throw new IllegalArgumentException("Argument is not of type Mage");
-
-        Mage mage = (Mage) o;
-
-        int nameComparison = this.name.compareTo(mage.name);
-        if (nameComparison != 0)
-            return nameComparison;
-
-        if (this.level != mage.level)
-            return Integer.compare(this.level, mage.level);
-
-        return Double.compare(this.power, mage.power);
+        return "Mage{" +
+                "name='" + name + '\'' +
+                ", level=" + level +
+                ", power=" + power +
+                '}';
     }
 }
