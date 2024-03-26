@@ -1,5 +1,0 @@
-<!-- logback.xml -->
-<configuration>
-    <logger name="org.hibernate" level="INFO"/>
-    <!-- other configurations -->
-</configuration>
